@@ -658,6 +658,7 @@
                                 <thead class="bg-white/40 dark:bg-slate-800/40 text-slate-800 dark:text-slate-200 border-b border-white/50 dark:border-slate-700/50">
                                     <tr>
                                         <th class="px-6 py-4 font-bold">Nama & Email</th>
+                                        <th class="px-6 py-4 font-bold">WhatsApp</th>
                                         <th class="px-6 py-4 font-bold">Info Rekening</th>
                                         <th class="px-6 py-4 font-bold text-center">Role</th>
                                         <th class="px-6 py-4 font-bold">Kode Affiliate</th>
@@ -1029,6 +1030,8 @@
         <i id="toastIcon" class="ph ph-check-circle text-green-500 text-2xl drop-shadow-sm"></i>
         <span id="toastMsg" class="text-sm font-bold">Notification message</span>
     </div>
+    </script>
+
 <!-- ==========================================
          JAVASCRIPT LOGIC (app.js)
          ========================================== -->
@@ -1721,7 +1724,7 @@
             tbody.innerHTML = '';
 
             if(window.appState.usersData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-slate-500 font-bold">Belum ada user.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 font-bold">Belum ada user.</td></tr>`;
                 return;
             }
 
@@ -1742,13 +1745,16 @@
                     </div>`;
                 }
 
+                // SINKRONISASI KOLOM: Nama&Email | WA | Info Rekening | Role | Code | Action
                 tbody.innerHTML += `
                     <tr class="hover:bg-white/30 dark:hover:bg-slate-800/30 transition-colors border-b border-white/10 dark:border-slate-700/30">
                         <td class="px-6 py-4">
                             <p class="font-bold text-slate-800 dark:text-white text-base leading-tight">${u.name}</p>
                             <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">${u.email}</p>
-                            <div class="flex items-center gap-1 mt-1 text-[10px] font-bold text-brand bg-brand/5 px-1.5 py-0.5 rounded w-max">
-                                <i class="ph ph-whatsapp-logo"></i> ${u.wa || '-'}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-1 text-xs font-bold text-brand bg-brand/5 px-2 py-1 rounded-lg w-max border border-brand/10">
+                                <i class="ph ph-whatsapp-logo text-green-500 text-sm"></i> ${u.wa || '-'}
                             </div>
                         </td>
                         <td class="px-6 py-4">${bankInfo}</td>
@@ -1767,88 +1773,105 @@
             });
         };
 
+        // BUGS FIXED: Ditambahkan Optional Chaining untuk mencegah crash jika elemen HTML terhapus manual
         window.openUserModal = () => {
-            const form = document.getElementById('userForm');
-            if(form) form.reset();
-            document.getElementById('userId').value = '';
-            document.getElementById('userModalTitle').innerText = 'Tambah User Baru';
-            document.getElementById('userPasswordContainer').classList.remove('hidden');
-            document.getElementById('userPassword').required = true;
-            document.getElementById('userModal').classList.remove('hidden');
+            try {
+                const form = document.getElementById('userForm');
+                if(form) form.reset();
+                
+                const userIdInput = document.getElementById('userId');
+                if(userIdInput) userIdInput.value = '';
+                
+                const title = document.getElementById('userModalTitle');
+                if(title) title.innerText = 'Tambah User Baru';
+                
+                const pwdContainer = document.getElementById('userPasswordContainer');
+                if(pwdContainer) pwdContainer.classList.remove('hidden');
+                
+                const pwdInput = document.getElementById('userPassword');
+                if(pwdInput) pwdInput.required = true;
+                
+                const modal = document.getElementById('userModal');
+                if(modal) modal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Gagal membuka Modal User: ", e);
+            }
         };
 
         window.closeUserModal = () => {
-            const modal = document.getElementById('userModal');
-            if(modal) modal.classList.add('hidden');
+            try {
+                const modal = document.getElementById('userModal');
+                if(modal) modal.classList.add('hidden');
+            } catch (e) {
+                console.error(e);
+            }
         };
 
         window.saveUser = async () => {
-            let id = document.getElementById('userId').value;
-            if (!id) id = window.generateShortId();
-            
-            const name = document.getElementById('userName').value;
-            const email = document.getElementById('userEmail').value;
-            const rawWa = document.getElementById('userWa').value;
-            const wa = window.formatPhoneNumber(rawWa);
-            const role = document.getElementById('userRole').value;
-            const rawPass = document.getElementById('userPassword').value;
+            try {
+                let idEl = document.getElementById('userId');
+                let id = idEl ? idEl.value : '';
+                if (!id) id = window.generateShortId();
+                
+                const name = document.getElementById('userName')?.value || '';
+                const email = document.getElementById('userEmail')?.value || '';
+                const rawWa = document.getElementById('userWa')?.value || '';
+                const wa = window.formatPhoneNumber(rawWa);
+                const role = document.getElementById('userRole')?.value || 'user';
+                const rawPass = document.getElementById('userPassword')?.value || '';
 
-            if(!name || !email) {
-                showToast("Nama dan Email wajib diisi", "error");
-                return;
-            }
-
-            let payload = { id, name, email, wa, role };
-
-            if (document.getElementById('userId').value) {
-                if (rawPass) {
-                    payload.password = await window.hashPassword(rawPass);
-                }
-            } else {
-                if (!rawPass) {
-                    showToast("Password wajib diisi untuk user baru", "error");
+                if(!name || !email) {
+                    showToast("Nama dan Email wajib diisi", "error");
                     return;
                 }
-                payload.password = await window.hashPassword(rawPass);
-                payload.license = role.toUpperCase() + '-' + Math.floor(Math.random() * 9999);
-                payload.affiliateCode = name.replace(/\s+/g, '').toUpperCase().substring(0, 5) + Math.floor(Math.random()*1000);
-            }
 
-            try {
+                let payload = { id, name, email, wa, role };
+
+                if (idEl && idEl.value) { // Jika ini adalah proses Edit User
+                    if (rawPass) {
+                        payload.password = await window.hashPassword(rawPass);
+                    }
+                } else { // Jika ini adalah proses Tambah User Baru
+                    if (!rawPass) {
+                        showToast("Password wajib diisi untuk user baru", "error");
+                        return;
+                    }
+                    payload.password = await window.hashPassword(rawPass);
+                    payload.license = role.toUpperCase() + '-' + Math.floor(Math.random() * 9999);
+                    payload.affiliateCode = name.replace(/\s+/g, '').toUpperCase().substring(0, 5) + Math.floor(Math.random()*1000);
+                }
+
                 await apiCall('saveUser', payload);
                 showToast("Data user berhasil disimpan!");
                 await loadAllData();
-                closeUserModal();
+                window.closeUserModal();
             } catch (e) {
                 showToast(e.message, "error");
             }
         };
 
         window.editUser = (id) => {
-            const u = window.appState.usersData.find(x => x.id === id);
-            if(!u) return;
-            document.getElementById('userModalTitle').innerText = 'Edit User';
-            document.getElementById('userId').value = u.id;
-            document.getElementById('userName').value = u.name;
-            document.getElementById('userEmail').value = u.email;
-            document.getElementById('userWa').value = u.wa || '';
-            document.getElementById('userRole').value = u.role || 'user';
-            
-            document.getElementById('userPassword').value = '';
-            document.getElementById('userPassword').required = false;
-            
-            document.getElementById('userModal').classList.remove('hidden');
-        };
-
-        window.deleteUser = async (id) => {
-            if(confirm("Hapus user ini?")) {
-                try {
-                    await apiCall('deleteUser', {id});
-                    showToast("User dihapus.");
-                    await loadAllData();
-                } catch (e) {
-                    showToast(e.message, "error");
+            try {
+                const u = window.appState.usersData.find(x => x.id === id);
+                if(!u) return;
+                
+                if(document.getElementById('userModalTitle')) document.getElementById('userModalTitle').innerText = 'Edit User';
+                if(document.getElementById('userId')) document.getElementById('userId').value = u.id;
+                if(document.getElementById('userName')) document.getElementById('userName').value = u.name;
+                if(document.getElementById('userEmail')) document.getElementById('userEmail').value = u.email;
+                if(document.getElementById('userWa')) document.getElementById('userWa').value = u.wa || '';
+                if(document.getElementById('userRole')) document.getElementById('userRole').value = u.role || 'user';
+                
+                const pwdInput = document.getElementById('userPassword');
+                if(pwdInput) {
+                    pwdInput.value = '';
+                    pwdInput.required = false;
                 }
+                
+                const modal = document.getElementById('userModal');
+                if(modal) modal.classList.remove('hidden');
+            } catch (e) {
+                console.error("Gagal membuka form Edit User: ", e);
             }
         };
 
@@ -2313,7 +2336,7 @@
             }
         };
 
-        // --- COUPONS CRUD LOGIC ---
+        // --- COUPONS CRUD LOGIC (KHUSUS MASTER & AFFILIATE) ---
 
         window.renderCouponsTable = () => {
             const tbody = document.getElementById('couponsTableBody');
@@ -2321,6 +2344,7 @@
             tbody.innerHTML = '';
 
             const isUserAdmin = window.appState.user.role === 'admin';
+            // Admin bisa liat semua, Affiliate cuma bisa liat kupon punya dia
             const filteredCoupons = isUserAdmin ? window.appState.coupons : window.appState.coupons.filter(c => c.createdBy === window.appState.user.id);
 
             if(filteredCoupons.length === 0) {
@@ -2340,6 +2364,7 @@
                         : '<span class="text-red-500 text-xs font-black uppercase">Produk Dihapus</span>';
                 }
 
+                // Visual pembeda antara Master (buatan Admin) dan Affiliate (buatan user)
                 let isMaster = c.createdBy === 'admin' || !c.createdBy;
                 let masterBadge = isMaster 
                     ? `<span class="bg-purple-500/20 text-purple-700 dark:text-purple-400 px-2 py-0.5 rounded text-[10px] font-bold uppercase ml-2 align-middle">Master</span>` 
@@ -2394,6 +2419,7 @@
                 adminConfig.classList.add('hidden');
                 affConfig.classList.remove('hidden');
                 
+                // Affiliate cuma bisa milih dari Master Kupon buatan admin
                 masterSelect.innerHTML = '';
                 const masterCoupons = window.appState.coupons.filter(c => c.createdBy === 'admin' || !c.createdBy);
                 if(masterCoupons.length === 0) {
@@ -2433,18 +2459,20 @@
                 createdAt: Date.now()
             };
 
+            // Jika Admin, simpan sesuai form angka manual.
             if (isAdmin) {
                 data.type = document.getElementById('couponType').value;
                 data.value = Number(document.getElementById('couponValue').value);
                 data.applicableProductId = document.getElementById('couponProductId').value;
                 data.masterCouponId = '';
-                data.createdBy = 'admin';
+                data.createdBy = 'admin'; // paksa sebagai admin
                 
                 if(!data.value) {
                     showToast("Nilai potongan harus diisi", "error");
                     return;
                 }
             } 
+            // Jika User/Agency, Kloning nilai dari Master Kupon
             else {
                 const masterId = document.getElementById('masterCouponSelect').value;
                 if (!masterId) {
@@ -2487,6 +2515,7 @@
             const affConfig = document.getElementById('affiliateCouponConfig');
             const masterSelect = document.getElementById('masterCouponSelect');
 
+            // Cek apakah admin mengedit kupon punya dia, atau Affiliate mengedit kuponnya sendiri
             if (isAdmin || coupon.createdBy === 'admin' || !coupon.createdBy) {
                 adminConfig.classList.remove('hidden');
                 affConfig.classList.add('hidden');
@@ -2871,7 +2900,7 @@
             const email = document.getElementById('coEmail').value;
             const rawPassword = document.getElementById('coPassword').value;
             const rawWa = document.getElementById('coWA').value;
-            const wa = window.formatPhoneNumber(rawWa);
+            const wa = window.formatPhoneNumber(rawWa); // KUNCI PERBAIKAN WA
             const methodEl = document.querySelector('input[name="paymentMethod"]:checked');
             
             if(!name || !email || !rawPassword || !wa) {
