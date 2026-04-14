@@ -481,7 +481,7 @@
                     <div class="glass border border-blue-200 dark:border-blue-900/50 p-4 rounded-2xl text-sm text-blue-800 dark:text-blue-200 flex items-start sm:items-center gap-3 shadow-sm relative overflow-hidden">
                         <div class="absolute inset-0 bg-blue-500/10 dark:bg-blue-500/20"></div>
                         <i class="ph ph-info text-2xl shrink-0 relative z-10 text-blue-500"></i>
-                        <p class="relative z-10"><strong>iMersFireShip System Active:</strong> Dibangun dengan AppScript & Vercel, bisa jalan tanpa domain & hosting mahal.</p>
+                        <p class="relative z-10"><strong>iMersFireShip System Active:</strong> Dibangun dengan AppScript & Vercel, bisa jalan tanpa domain & hosting mahal - tes cekout yang ada nilai rupiahnya pake email lain dan aktifkan sendri .</p>
                     </div>
                     <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10">
                         <div class="overflow-x-auto">
@@ -1002,6 +1002,12 @@
                         <p class="text-[10px] text-slate-500 mt-1">Gunakan ini jika kamu tidak punya URL Landing Page Eksternal.</p>
                     </div>
 
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Internal Accesspage (HTML Custom)</label>
+                        <textarea id="prodAccessHtml" placeholder="Ketik konten akses kustom (HTML) untuk pembeli di sini..." class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none text-sm h-32 font-mono"></textarea>
+                        <p class="text-[10px] text-slate-400 mt-1 italic">Gunakan ini agar kustomer melihat panduan/akses dalam bentuk landing page tanpa padding.</p>
+                    </div>
+
                     <div class="border border-white/40 dark:border-slate-700/50 rounded-2xl p-5 bg-white/30 dark:bg-slate-800/30">
                         <h4 class="font-black text-slate-800 dark:text-white mb-3 text-sm flex items-center gap-2"><i class="ph ph-money text-green-500 text-lg"></i> Komisi Affiliate</h4>
                         <div class="grid grid-cols-2 gap-4">
@@ -1043,7 +1049,7 @@
 
                     <div id="fieldAccess">
                         <div class="flex items-center justify-between mb-2">
-                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300">Additional Info / Notes <span class="text-slate-400 dark:text-slate-500 font-medium">(Optional)</span></label>
+                            <label class="block text-sm font-bold text-slate-700 dark:text-slate-300">Additional Info / AccessHTML code / Notes <span class="text-slate-400 dark:text-slate-500 font-medium">(Optional)</span></label>
                         </div>
                         <textarea id="prodAccess" rows="3" class="w-full px-4 py-3 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-brand dark:text-white text-sm leading-relaxed" placeholder="Catatan tambahan (mendukung tag HTML dasar jika dibutuhkan)..."></textarea>
                     </div>
@@ -1124,7 +1130,7 @@
             <div class="p-6 overflow-y-auto flex-1 space-y-6">
                 <div class="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 flex flex-col gap-2">
                     <p class="text-xs font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wider"><i class="ph ph-info"></i> Variabel Dinamis yang Bisa Digunakan:</p>
-                    <p class="text-sm font-mono text-slate-600 dark:text-slate-300">{nama}, {email}, {wa}, {produk}, {total}, {metode}, {status}, {password}, {komisi}</p>
+                    <p class="text-sm font-mono text-slate-600 dark:text-slate-300">{nama}, {email}, {brand}, {wa}, {produk}, {total}, {metode}, {status}, {password}, {komisi}</p>
                 </div>
                 <form id="templateForm" class="space-y-5">
                     <input type="hidden" id="tmplId">
@@ -1241,6 +1247,18 @@
         </div>
     </div>
 
+    <div id="htmlAccessModal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[99] hidden flex justify-center items-start overflow-y-auto p-0">
+    <div class="bg-white dark:bg-slate-900 w-full max-w-5xl min-h-screen relative shadow-2xl">
+        <button onclick="document.getElementById('htmlAccessModal').classList.add('hidden')" class="fixed top-6 right-6 bg-black/50 hover:bg-red-600 text-white w-12 h-12 rounded-full flex items-center justify-center z-[100] border border-white/20 shadow-xl">
+            <i class="ph ph-x text-2xl"></i>
+        </button>
+        <div id="htmlAccessContent" class="w-full p-0">
+            <!-- Konten HTML Kustom lo bakal nampil di sini tanpa padding -->
+            </div>
+        </div>
+    </div>
+
+    
     <!-- Notification Toast -->
     <div id="toast" class="fixed bottom-6 right-6 glass text-slate-800 dark:text-white px-5 py-4 rounded-2xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 z-[60] flex items-center gap-3 border-l-4 border-l-green-500">
         <i id="toastIcon" class="ph ph-check-circle text-green-500 text-2xl drop-shadow-sm"></i>
@@ -1779,23 +1797,34 @@
     };
 
     window.handleForgot = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('forgotBtn');
-        const email = document.getElementById('forgotEmail').value;
+    e.preventDefault();
+    const btn = document.getElementById('forgotBtn');
+    const email = document.getElementById('forgotEmail').value.trim();
+    
+    if(!email) return window.showToast("Email wajib diisi ya bro!", "error");
 
-        btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Memproses...';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Memproses...';
 
-        try {
-            await apiCall('forgotPassword', {email});
+    try {
+        // Panggil backend action forgotPassword yang baru kita buat
+        const res = await apiCall('forgotPassword', { email: email });
+        
+        if(res.success) {
             window.showToast("Instruksi reset password telah dikirim ke Email/WA Anda.", "success");
             document.getElementById('forgotForm').reset();
-            window.switchAuthView('login');
-        } catch(err) {
-            window.showToast("Error: " + err.message, "error");
+            
+            // Balikin ke tampilan login biar kustomer bisa langsung coba password defaultnya
+            if(typeof window.switchAuthView === 'function') window.switchAuthView('login');
+        }
+        } catch (err) {
+        window.showToast("Error: " + err.message, "error");
         } finally {
-            btn.innerHTML = '<span>Kirim Reset Link</span> <i class="ph ph-paper-plane-tilt"></i>';
+        btn.disabled = false;
+        btn.innerHTML = '<span>Kirim Reset Link</span> <i class="ph ph-paper-plane-tilt"></i>';
         }
     };
+
 
     window.handleChangePassword = async (e) => {
         if(e) e.preventDefault();
@@ -2104,9 +2133,9 @@
             const title = document.getElementById('prodTitle')?.value || '';
             const price = Number(document.getElementById('prodPrice')?.value || 0);
             const desc = document.getElementById('prodDesc')?.value || '';
-            const accessHtml = document.getElementById('prodAccess')?.value || '';
+            const accessHtml = document.getElementById('prodAccessHtml')?.value || '';
             const salesPageUrl = document.getElementById('prodSalesPage')?.value || '';
-            const salesPageHtml = document.getElementById('prodSalesPageHtml')?.value || '';
+            const salesPageHtml = document.getElementById('prodSalesPageHtml')?.value || ''
             const commissionType = document.getElementById('prodCommType')?.value || 'percent';
             const commissionValue = document.getElementById('prodCommValue')?.value || '';
             
@@ -2979,6 +3008,19 @@
         document.getElementById('spModalContent').innerHTML = ''; 
     };
 
+    window.openAccessModal = (encodedData) => {
+    try {
+        const rawHtml = decodeURIComponent(escape(atob(encodedData)));
+        const container = document.getElementById('htmlAccessContent');
+        if (container) {
+            container.innerHTML = rawHtml;
+            document.getElementById('htmlAccessModal').classList.remove('hidden');
+        }
+        } catch (e) {
+        console.error("Gagal load access HTML:", e);
+        }
+    };
+
     window.openProductAccess = (id) => {
         const product = window.appState.products.find(p => String(p.id) === String(id));
         if(!product) return;
@@ -3034,7 +3076,7 @@
         
         const htmlArea = document.getElementById('pvHtmlArea');
         if (product.accessHtml && product.accessHtml.trim() !== '') { 
-            htmlArea.innerHTML = `<h4 class="font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2"><i class="ph ph-info text-amber-500"></i> Info Tambahan</h4>` + product.accessHtml; 
+            htmlArea.innerHTML = `<h4 class="font-black text-slate-800 dark:text-white mb-3 flex items-center gap-2"><i class="ph ph-info text-amber-500"></i> Akses Product</h4>` + product.accessHtml; 
             htmlArea.classList.remove('hidden'); 
         } else { 
             htmlArea.classList.add('hidden'); 
