@@ -481,7 +481,7 @@
                     <div class="glass border border-blue-200 dark:border-blue-900/50 p-4 rounded-2xl text-sm text-blue-800 dark:text-blue-200 flex items-start sm:items-center gap-3 shadow-sm relative overflow-hidden">
                         <div class="absolute inset-0 bg-blue-500/10 dark:bg-blue-500/20"></div>
                         <i class="ph ph-info text-2xl shrink-0 relative z-10 text-blue-500"></i>
-                        <p class="relative z-10"><strong>Affiliate Ready:</strong> Edit produk untuk mengatur komisi dan link eksternal (Salespage) untuk Affiliate.</p>
+                        <p class="relative z-10"><strong>iMersFireShip System Active:</strong> Dibangun dengan AppScript & Vercel, bisa jalan tanpa domain & hosting mahal.</p>
                     </div>
                     <div class="glass rounded-2xl overflow-hidden shadow-xl relative z-10">
                         <div class="overflow-x-auto">
@@ -924,22 +924,7 @@
                                     <button onclick="addBankField()" class="text-xs bg-brand/10 hover:bg-brand/20 text-brand font-black px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center gap-1"><i class="ph ph-plus-circle text-lg"></i> Add Bank</button>
                                 </div>
 
-                                <div class="bg-white/30 dark:bg-slate-800/30 p-5 rounded-2xl border border-white/40 dark:border-slate-700/50">
-                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-4">3rd Party Gateways (Auto-Approval)</label>
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <label class="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white/50 dark:bg-slate-900/50 cursor-pointer hover:border-brand transition-all">
-                                            <input type="checkbox" id="gwTripay" class="accent-brand w-5 h-5"> <span class="text-sm font-bold dark:text-white">Tripay</span>
-                                        </label>
-                                        <label class="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white/50 dark:bg-slate-900/50 cursor-pointer hover:border-brand transition-all">
-                                            <input type="checkbox" id="gwDuitku" class="accent-brand w-5 h-5"> <span class="text-sm font-bold dark:text-white">Duitku</span>
-                                        </label>
-                                        <label class="flex items-center gap-3 p-3 border border-slate-300 dark:border-slate-600 rounded-xl bg-white/50 dark:bg-slate-900/50 cursor-pointer hover:border-brand transition-all">
-                                            <input type="checkbox" id="gwSendit" class="accent-brand w-5 h-5"> <span class="text-sm font-bold dark:text-white">SendiT</span>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
+                                
                             <div class="pt-6 border-t border-white/40 dark:border-slate-700/50">
                                 <button onclick="saveSettings()" class="bg-gradient-to-r from-brand to-purple-600 hover:from-brandHover hover:to-purple-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-brand/30 w-full sm:w-auto">
                                     Save Changes
@@ -1669,27 +1654,22 @@
         }
         window.applyLogo(set.logoUrl);
         
-        const settingAppNameEl = document.getElementById('settingAppName');
-        if (settingAppNameEl) settingAppNameEl.value = set.appName || 'iMersFireship';
-        
-        const settingColorEl = document.getElementById('settingColor');
-        if (settingColorEl) settingColorEl.value = set.primaryColor || '#4f46e5';
-        
-        const settingColorTextEl = document.getElementById('settingColorText');
-        if (settingColorTextEl) settingColorTextEl.value = set.primaryColor || '#4f46e5';
-        
-        const settingLogoUrlEl = document.getElementById('settingLogoUrl');
-        if (settingLogoUrlEl) settingLogoUrlEl.value = set.logoUrl || '';
+        if (document.getElementById('settingAppName')) document.getElementById('settingAppName').value = set.appName || 'iMersFireship';
+        if (document.getElementById('settingColor')) document.getElementById('settingColor').value = set.primaryColor || '#4f46e5';
+        if (document.getElementById('settingColorText')) document.getElementById('settingColorText').value = set.primaryColor || '#4f46e5';
+        if (document.getElementById('settingLogoUrl')) document.getElementById('settingLogoUrl').value = set.logoUrl || '';
 
+        // TAMPILKAN KEMBALI DATA NOTIFIKASI (WA, Email, Telegram)
         if (set.notifications) {
-            const notifWaProviderEl = document.getElementById('notifWaProvider');
-            if (notifWaProviderEl) notifWaProviderEl.value = set.notifications.waProvider || 'fonnte';
+            if (document.getElementById('notifWaProvider')) document.getElementById('notifWaProvider').value = set.notifications.waProvider || 'fonnte';
+            if (document.getElementById('notifWaToken')) document.getElementById('notifWaToken').value = set.notifications.waToken || '';
+            if (document.getElementById('notifAdminWa')) document.getElementById('notifAdminWa').value = set.notifications.adminWa || '';
             
-            const notifWaTokenEl = document.getElementById('notifWaToken');
-            if (notifWaTokenEl) notifWaTokenEl.value = set.notifications.waToken || '';
+            if (document.getElementById('notifEmailProvider')) document.getElementById('notifEmailProvider').value = set.notifications.emailProvider || 'google';
+            if (document.getElementById('notifEmailToken')) document.getElementById('notifEmailToken').value = set.notifications.emailToken || '';
             
-            const notifAdminWaEl = document.getElementById('notifAdminWa');
-            if (notifAdminWaEl) notifAdminWaEl.value = set.notifications.adminWa || '';
+            if (document.getElementById('notifTelegramToken')) document.getElementById('notifTelegramToken').value = set.notifications.telegramToken || '';
+            if (document.getElementById('notifTelegramChatId')) document.getElementById('notifTelegramChatId').value = set.notifications.telegramChatId || '';
         }
     };
 
@@ -3283,24 +3263,48 @@
     };
 
     window.saveSettings = async () => { 
-        try{ 
-            const n=document.getElementById('settingAppName').value, c=document.getElementById('settingColor').value, f=document.getElementById('settingLogoFile').files[0], lu=document.getElementById('settingLogoUrl').value; 
-            document.documentElement.style.setProperty('--brand-color',c); 
-            document.documentElement.style.setProperty('--brand-hover',c); 
-            document.querySelectorAll('.app-name-display').forEach(e=>e.innerText=n||'iMers'); 
+        try { 
+            const n = document.getElementById('settingAppName').value;
+            const c = document.getElementById('settingColor').value;
+            const f = document.getElementById('settingLogoFile').files[0];
+            const lu = document.getElementById('settingLogoUrl').value; 
             
-            let bk=[]; 
-            document.querySelectorAll('.bank-item').forEach(e=>{
-                const bn=e.querySelector('.b-name').value; 
-                if(bn) bk.push({name:bn,no:e.querySelector('.b-no').value,owner:e.querySelector('.b-owner').value});
+            document.documentElement.style.setProperty('--brand-color', c); 
+            document.documentElement.style.setProperty('--brand-hover', c); 
+            document.querySelectorAll('.app-name-display').forEach(e => e.innerText = n || 'iMers'); 
+            
+            let bk = []; 
+            document.querySelectorAll('.bank-item').forEach(e => {
+                const bn = e.querySelector('.b-name').value; 
+                if(bn) bk.push({name: bn, no: e.querySelector('.b-no').value, owner: e.querySelector('.b-owner').value});
             }); 
             
-            let img = f ? await window.compressImage(f,400) : lu; 
-            await apiCall('saveSettings',{appName:n, primaryColor:c, logoUrl:img, adminWa:window.formatPhoneNumber(document.getElementById('notifAdminWa').value), banks:bk}); 
+            // AMBIL DATA NOTIFIKASI (WA, EMAIL, TELEGRAM)
+            const notifData = {
+                waProvider: document.getElementById('notifWaProvider')?.value || 'fonnte',
+                waToken: document.getElementById('notifWaToken')?.value || '',
+                adminWa: window.formatPhoneNumber(document.getElementById('notifAdminWa')?.value || ''),
+                emailProvider: document.getElementById('notifEmailProvider')?.value || 'google',
+                emailToken: document.getElementById('notifEmailToken')?.value || '',
+                telegramToken: document.getElementById('notifTelegramToken')?.value || '',
+                telegramChatId: document.getElementById('notifTelegramChatId')?.value || ''
+            };
+
+            let img = f ? await window.compressImage(f, 400) : lu; 
+            
+            // KIRIM SEMUA DATA KE GOOGLE SHEETS
+            await apiCall('saveSettings', {
+                appName: n, 
+                primaryColor: c, 
+                logoUrl: img, 
+                banks: bk,
+                notifications: notifData
+            }); 
+            
             window.applyLogo(img); 
             window.showToast("Settings saved!"); 
             await window.loadAllData(); 
-        } catch(e) { window.showToast(e.message,"error"); } 
+        } catch(e) { window.showToast(e.message, "error"); } 
     };
 
     window.applyLogo = (src) => { 
